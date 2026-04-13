@@ -1,551 +1,342 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
-type Tab = "home" | "schedule" | "map" | "history" | "profile";
+type Tab = "schedule" | "news" | "contacts";
 
-const HERO_IMAGE = "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/48dba0c3-c5a7-4b6e-a923-91a8d422f5ab.jpg";
+const VILLAGE_IMG = "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/ea2406f1-e54d-429e-a7f8-55df7d80bdf1.jpg";
 
-const routes = [
-  { id: 1, from: "Москва", to: "Санкт-Петербург", time: "07:30", arrive: "11:45", duration: "4ч 15м", price: 1890, seats: 12, type: "Экспресс", status: "active" },
-  { id: 2, from: "Москва", to: "Казань", time: "09:00", arrive: "15:20", duration: "6ч 20м", price: 2100, seats: 5, type: "Прямой", status: "filling" },
-  { id: 3, from: "Москва", to: "Нижний Новгород", time: "10:15", arrive: "14:00", duration: "3ч 45м", price: 980, seats: 28, type: "Экспресс", status: "active" },
-  { id: 4, from: "Москва", to: "Владимир", time: "12:00", arrive: "14:10", duration: "2ч 10м", price: 650, seats: 2, type: "Прямой", status: "almost" },
-  { id: 5, from: "Москва", to: "Ярославль", time: "14:30", arrive: "17:45", duration: "3ч 15м", price: 1100, seats: 18, type: "Экспресс", status: "active" },
+const schedule = {
+  "Ключи → Фомино": [
+    { dep: "07:10", arr: "07:25", days: "пн–пт" },
+    { dep: "09:40", arr: "09:55", days: "ежедневно" },
+    { dep: "13:15", arr: "13:30", days: "ежедневно" },
+    { dep: "16:50", arr: "17:05", days: "ежедневно" },
+    { dep: "19:20", arr: "19:35", days: "пн–пт" },
+  ],
+  "Фомино → Ключи": [
+    { dep: "07:30", arr: "07:45", days: "пн–пт" },
+    { dep: "10:05", arr: "10:20", days: "ежедневно" },
+    { dep: "13:40", arr: "13:55", days: "ежедневно" },
+    { dep: "17:15", arr: "17:30", days: "ежедневно" },
+    { dep: "19:45", arr: "20:00", days: "пн–пт" },
+  ],
+  "До Сысерти": [
+    { dep: "06:30", arr: "07:05", days: "пн–пт", via: "через Ключи" },
+    { dep: "08:00", arr: "08:35", days: "ежедневно", via: "через Фомино" },
+    { dep: "12:00", arr: "12:35", days: "ежедневно", via: "через Ключи" },
+    { dep: "15:30", arr: "16:05", days: "пн–пт", via: "через Фомино" },
+    { dep: "18:00", arr: "18:35", days: "ежедневно", via: "через Ключи" },
+  ],
+} as const;
+
+type Direction = keyof typeof schedule;
+
+const news = [
+  {
+    id: 1,
+    date: "12 апр",
+    tag: "⚠️ Важно",
+    tagColor: "bg-amber-100 text-amber-800",
+    title: "Отключение воды 15 апреля",
+    body: "В связи с плановыми ремонтными работами 15 апреля с 09:00 до 17:00 будет отключена холодная вода в д. Ключи (ул. Лесная, Полевая). Запаситесь водой заранее.",
+  },
+  {
+    id: 2,
+    date: "10 апр",
+    tag: "📢 Объявление",
+    tagColor: "bg-blue-100 text-blue-800",
+    title: "Субботник 19 апреля",
+    body: "Приглашаем всех жителей на общий субботник. Встречаемся у магазина в 10:00. Берите перчатки и мусорные мешки. Организатор — совет ветеранов.",
+  },
+  {
+    id: 3,
+    date: "7 апр",
+    tag: "🌿 Новость",
+    tagColor: "bg-green-100 text-green-800",
+    title: "Дорогу до Фомино отремонтируют",
+    body: "Администрация Сысертского МО подтвердила: участок дороги Ключи–Фомино протяжённостью 2,4 км включён в план ремонта на лето 2026 года.",
+  },
+  {
+    id: 4,
+    date: "3 апр",
+    tag: "📌 Объявление",
+    tagColor: "bg-stone-100 text-stone-600",
+    title: "Продаётся картофель",
+    body: "Продаю картофель — 15 руб/кг, мешками. Самовывоз. Д. Ключи, ул. Советская, 14. Звонить с 9 до 19: 8-912-XXX-XX-XX.",
+  },
 ];
 
-const history = [
-  { id: 1, from: "Москва", to: "СПб", date: "8 апр", price: 1890, status: "Завершён" },
-  { id: 2, from: "Казань", to: "Москва", date: "3 апр", price: 2100, status: "Завершён" },
-  { id: 3, from: "Москва", to: "Владимир", date: "28 мар", price: 650, status: "Отменён" },
-];
-
-const prices = [
-  { route: "Москва → СПб", economy: 1200, comfort: 1890, business: 3200 },
-  { route: "Москва → Казань", economy: 1500, comfort: 2100, business: 3800 },
-  { route: "Москва → НН", economy: 700, comfort: 980, business: 2200 },
+const contacts = [
+  {
+    group: "Экстренные службы",
+    items: [
+      { icon: "Phone",     label: "Скорая помощь",            value: "103",              sub: "или 8-800-350-30-03",   color: "text-red-600",    bg: "bg-red-50" },
+      { icon: "Flame",     label: "Пожарная служба",          value: "101",              sub: "МЧС Сысерть",           color: "text-orange-600", bg: "bg-orange-50" },
+      { icon: "Shield",    label: "Полиция",                  value: "102",              sub: "Участковый Сысерть",    color: "text-blue-700",   bg: "bg-blue-50" },
+    ],
+  },
+  {
+    group: "Администрация",
+    items: [
+      { icon: "Building2", label: "Адм. Сысертского МО",      value: "8 (34374) 6-08-01", sub: "пн–пт, 9:00–17:00",  color: "text-green-800",  bg: "bg-green-50" },
+      { icon: "Users",     label: "Сельский совет",           value: "8 (34374) X-XX-XX", sub: "по вопросам ЖКХ",     color: "text-green-800",  bg: "bg-green-50" },
+    ],
+  },
+  {
+    group: "Коммунальные службы",
+    items: [
+      { icon: "Zap",       label: "Авария — электричество",   value: "8 (34374) 6-XX-XX", sub: "ЕЭСК, круглосуточно", color: "text-yellow-700", bg: "bg-yellow-50" },
+      { icon: "Droplets",  label: "Авария — водоснабжение",   value: "8 (34374) X-XX-XX", sub: "круглосуточно",       color: "text-sky-700",    bg: "bg-sky-50" },
+      { icon: "Bus",       label: "Справочная автовокзал",    value: "8 (34374) 6-XX-XX", sub: "г. Сысерть",         color: "text-amber-800",  bg: "bg-amber-50" },
+    ],
+  },
 ];
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState<Tab>("home");
-  const [fromCity, setFromCity] = useState("Москва");
-  const [toCity, setToCity] = useState("");
-  const [date, setDate] = useState("2026-04-13");
-  const [selectedRoute, setSelectedRoute] = useState<number | null>(null);
-  const [booked, setBooked] = useState<number | null>(null);
-  const [notificationsOn, setNotificationsOn] = useState(true);
-  const [selectedSeat, setSelectedSeat] = useState("12А");
+  const [tab, setTab] = useState<Tab>("schedule");
+  const [direction, setDirection] = useState<Direction>("Ключи → Фомино");
+  const [openNews, setOpenNews] = useState<number | null>(null);
 
-  const handleBook = (id: number) => setSelectedRoute(id);
+  const nowHour = new Date().getHours();
+  const greeting = nowHour < 12 ? "Доброе утро" : nowHour < 18 ? "Добрый день" : "Добрый вечер";
 
-  const confirmBook = () => {
-    setBooked(selectedRoute);
-    setSelectedRoute(null);
-    setTimeout(() => setBooked(null), 3500);
-  };
-
-  const statusColor = (s: string) => {
-    if (s === "active") return "bg-green-400";
-    if (s === "filling") return "bg-amber-400";
-    if (s === "almost") return "bg-red-400";
-    return "bg-gray-300";
-  };
-
-  const statusLabel = (s: string) => {
-    if (s === "active") return "Свободно";
-    if (s === "filling") return "Заполняется";
-    if (s === "almost") return "Мало мест";
-    return "";
-  };
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const parseMin = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto relative">
+    <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto">
 
-      {/* ─── HOME ─── */}
-      {activeTab === "home" && (
-        <div className="flex-1 overflow-y-auto pb-24">
-          {/* Hero */}
-          <div className="relative h-72 overflow-hidden">
-            <img src={HERO_IMAGE} alt="Маршрут" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background" />
-            <div className="absolute top-0 left-0 right-0 p-5 flex items-center justify-between">
-              <div className="glass-dark px-3 py-1.5 rounded-full">
-                <span className="font-display text-white/90 text-lg font-light tracking-wide">Транзит</span>
-              </div>
+      {/* ── ШАПКА ── */}
+      <header className="relative overflow-hidden" style={{ height: 220 }}>
+        <img src={VILLAGE_IMG} alt="Деревня" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/15 to-background" />
+
+        <div className="absolute inset-0 flex flex-col justify-between p-5 pb-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-white/65 text-xs font-sans">{greeting}</p>
+              <h1 className="text-white font-serif text-2xl font-bold leading-tight drop-shadow-md mt-0.5">
+                Ключи & Фомино
+              </h1>
+              <p className="text-white/55 text-xs font-sans mt-1">Сысертский муниципальный округ</p>
+            </div>
+            <div className="bg-white/15 backdrop-blur-md rounded-xl px-3 py-2 text-center border border-white/20">
+              <p className="text-white text-lg font-sans font-semibold leading-none">+8°</p>
+              <p className="text-white/55 text-xs font-sans mt-0.5">Облачно</p>
+            </div>
+          </div>
+
+          {/* Навигация */}
+          <div className="flex gap-2">
+            {([
+              { id: "schedule", icon: "Bus",       label: "Расписание" },
+              { id: "news",     icon: "Newspaper",  label: "Объявления" },
+              { id: "contacts", icon: "Phone",      label: "Контакты" },
+            ] as { id: Tab; icon: string; label: string }[]).map((t) => (
               <button
-                onClick={() => setNotificationsOn(!notificationsOn)}
-                className="glass-dark w-9 h-9 rounded-full flex items-center justify-center"
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-sans font-medium transition-all ${
+                  tab === t.id
+                    ? "bg-white text-green-900 shadow-md"
+                    : "bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                }`}
               >
-                <Icon name={notificationsOn ? "Bell" : "BellOff"} size={16} className="text-white/80" />
-              </button>
-            </div>
-            <div className="absolute bottom-5 left-5 glass px-3 py-1.5 rounded-full flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse-dot inline-block" style={{boxShadow: "0 0 0 4px rgba(74,222,128,0.25)"}} />
-              <span className="text-xs font-body text-foreground/70">142 рейса сегодня</span>
-            </div>
-          </div>
-
-          {/* Search block */}
-          <div className="px-5 -mt-1 animate-fade-up">
-            <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-              <p className="font-display text-2xl font-light text-foreground mb-4 leading-tight">
-                Куда<br /><em>едем?</em>
-              </p>
-
-              <div className="mb-3">
-                <label className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-1 block">Откуда</label>
-                <div className="relative">
-                  <Icon name="MapPin" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-moss" />
-                  <input
-                    value={fromCity}
-                    onChange={e => setFromCity(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 bg-muted rounded-xl text-sm font-body focus:outline-none focus:ring-2 focus:ring-earth/30 text-foreground"
-                    placeholder="Город отправления"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex-1 h-px bg-border" />
-                <button
-                  onClick={() => { const t = fromCity; setFromCity(toCity); setToCity(t); }}
-                  className="w-8 h-8 rounded-full bg-sand border border-border flex items-center justify-center hover:bg-amber/20 transition-colors"
-                >
-                  <Icon name="ArrowUpDown" size={14} className="text-earth" />
-                </button>
-                <div className="flex-1 h-px bg-border" />
-              </div>
-
-              <div className="mb-3">
-                <label className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-1 block">Куда</label>
-                <div className="relative">
-                  <Icon name="Navigation" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-earth" />
-                  <input
-                    value={toCity}
-                    onChange={e => setToCity(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 bg-muted rounded-xl text-sm font-body focus:outline-none focus:ring-2 focus:ring-earth/30 text-foreground"
-                    placeholder="Город назначения"
-                  />
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-1 block">Дата</label>
-                <div className="relative">
-                  <Icon name="Calendar" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 bg-muted rounded-xl text-sm font-body focus:outline-none focus:ring-2 focus:ring-earth/30 text-foreground"
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={() => setActiveTab("schedule")}
-                className="w-full py-3 bg-earth text-primary-foreground rounded-xl font-body text-sm font-medium flex items-center justify-center gap-2 hover:bg-pine transition-colors"
-              >
-                <Icon name="Search" size={16} />
-                Найти маршрут
-              </button>
-            </div>
-          </div>
-
-          {/* Quick links */}
-          <div className="px-5 mt-5 animate-fade-up delay-200">
-            <p className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-3">Быстрый доступ</p>
-            <div className="grid grid-cols-4 gap-3">
-              {[
-                { icon: "Clock", label: "Расписание", tab: "schedule" as Tab },
-                { icon: "Map", label: "Карта", tab: "map" as Tab },
-                { icon: "Receipt", label: "Цены", tab: "history" as Tab },
-                { icon: "User", label: "Кабинет", tab: "profile" as Tab },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => setActiveTab(item.tab)}
-                  className="flex flex-col items-center gap-2 p-3 bg-card rounded-2xl border border-border card-hover"
-                >
-                  <div className="w-10 h-10 bg-sand rounded-xl flex items-center justify-center">
-                    <Icon name={item.icon} size={18} className="text-earth" />
-                  </div>
-                  <span className="text-xs font-body text-foreground/70">{item.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Popular routes */}
-          <div className="px-5 mt-6 animate-fade-up delay-300">
-            <p className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-3">Популярные направления</p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {["СПб", "Казань", "Н. Новгород", "Владимир", "Ярославль"].map((city) => (
-                <button
-                  key={city}
-                  onClick={() => {
-                    setToCity(city === "Н. Новгород" ? "Нижний Новгород" : city === "СПб" ? "Санкт-Петербург" : city);
-                    setActiveTab("schedule");
-                  }}
-                  className="flex-shrink-0 px-4 py-2 bg-card border border-border rounded-full text-sm font-body text-foreground/80 hover:bg-sand transition-colors"
-                >
-                  {city}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── SCHEDULE ─── */}
-      {activeTab === "schedule" && (
-        <div className="flex-1 overflow-y-auto pb-24">
-          <div className="px-5 pt-8 pb-4">
-            <div className="flex items-center gap-3 mb-1">
-              <button onClick={() => setActiveTab("home")} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <Icon name="ChevronLeft" size={18} className="text-foreground" />
-              </button>
-              <div>
-                <h1 className="font-display text-2xl font-light">Расписание</h1>
-                <p className="text-xs text-muted-foreground font-body">
-                  {fromCity || "Откуда"} → {toCity || "Куда"} · 13 апреля
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="px-5 flex gap-2 mb-4">
-            {["Все", "Экспресс", "Прямой"].map((f, i) => (
-              <button key={f} className={`px-3 py-1.5 rounded-full text-xs font-body border transition-colors ${i === 0 ? "bg-earth text-primary-foreground border-earth" : "bg-card border-border text-foreground/70 hover:bg-sand"}`}>
-                {f}
+                <Icon name={t.icon} size={14} />
+                {t.label}
               </button>
             ))}
           </div>
-
-          <div className="px-5 space-y-3">
-            {routes.map((r, idx) => (
-              <div
-                key={r.id}
-                className="bg-card rounded-2xl border border-border p-4 card-hover cursor-pointer animate-fade-up"
-                style={{ animationDelay: `${idx * 0.07}s`, opacity: 0 }}
-                onClick={() => handleBook(r.id)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${statusColor(r.status)}`} />
-                    <span className="text-xs font-body text-muted-foreground">{statusLabel(r.status)}</span>
-                    <span className="text-xs font-body text-muted-foreground">· {r.seats} мест</span>
-                  </div>
-                  <span className="text-xs px-2 py-0.5 bg-sand rounded-full font-body text-earth">{r.type}</span>
-                </div>
-
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="text-center">
-                    <p className="font-display text-2xl font-medium text-foreground">{r.time}</p>
-                    <p className="text-xs font-body text-muted-foreground">{r.from}</p>
-                  </div>
-                  <div className="flex-1 flex items-center gap-1">
-                    <div className="flex-1 h-px bg-border" />
-                    <div className="flex flex-col items-center">
-                      <Icon name="ArrowRight" size={14} className="text-muted-foreground" />
-                      <span className="text-xs font-body text-muted-foreground mt-0.5">{r.duration}</span>
-                    </div>
-                    <div className="flex-1 h-px bg-border" />
-                  </div>
-                  <div className="text-center">
-                    <p className="font-display text-2xl font-medium text-foreground">{r.arrive}</p>
-                    <p className="text-xs font-body text-muted-foreground">{r.to}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <p className="font-display text-xl font-medium text-earth">
-                    {r.price.toLocaleString()} ₽
-                  </p>
-                  <button
-                    className="px-4 py-1.5 bg-earth text-primary-foreground rounded-xl text-xs font-body hover:bg-pine transition-colors"
-                    onClick={(e) => { e.stopPropagation(); handleBook(r.id); }}
-                  >
-                    Забронировать
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-      )}
+      </header>
 
-      {/* ─── MAP ─── */}
-      {activeTab === "map" && (
-        <div className="flex-1 flex flex-col pb-24">
-          <div className="px-5 pt-8 pb-4">
-            <h1 className="font-display text-3xl font-light mb-1">Карта</h1>
-            <p className="text-sm text-muted-foreground font-body">Маршруты в реальном времени</p>
-          </div>
+      {/* ── КОНТЕНТ ── */}
+      <main className="flex-1 px-4 pt-5 pb-10">
 
-          <div className="mx-5 rounded-3xl overflow-hidden relative bg-secondary border border-border" style={{minHeight: "280px"}}>
-            <img src={HERO_IMAGE} alt="Карта маршрутов" className="w-full h-full object-cover opacity-50 absolute inset-0" style={{height: "280px"}} />
-            <div className="absolute inset-0 flex flex-col items-center justify-center" style={{height: "280px"}}>
-              <div className="glass px-6 py-4 rounded-2xl text-center">
-                <Icon name="Map" size={32} className="text-earth mx-auto mb-2" />
-                <p className="font-display text-xl text-foreground">Интерактивная карта</p>
-                <p className="text-xs text-muted-foreground font-body mt-1">Подключается в следующей версии</p>
-              </div>
-            </div>
+        {/* ══ РАСПИСАНИЕ ══ */}
+        {tab === "schedule" && (
+          <div className="animate-fade-up">
+            <p className="section-label">Выберите направление</p>
 
-            {[
-              { top: "30%", left: "25%", label: "Москва" },
-              { top: "15%", left: "55%", label: "СПб" },
-              { top: "50%", left: "70%", label: "Казань" },
-              { top: "45%", left: "45%", label: "НН" },
-            ].map((m) => (
-              <div key={m.label} className="absolute" style={{ top: m.top, left: m.left }}>
-                <div className="relative">
-                  <div className="w-3 h-3 rounded-full bg-earth border-2 border-white shadow-md" />
-                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs font-body text-earth bg-white/80 px-1.5 rounded whitespace-nowrap shadow-sm">
-                    {m.label}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="px-5 mt-5">
-            <p className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-3">Активные маршруты</p>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {routes.slice(0, 3).map((r) => (
-                <div key={r.id} className="flex-shrink-0 bg-card border border-border rounded-2xl px-4 py-3 min-w-40">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className={`w-2 h-2 rounded-full ${statusColor(r.status)}`} />
-                    <span className="text-xs font-body text-muted-foreground">{r.time}</span>
-                  </div>
-                  <p className="font-body text-sm font-medium text-foreground">{r.from} → {r.to}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── HISTORY + PRICES ─── */}
-      {activeTab === "history" && (
-        <div className="flex-1 overflow-y-auto pb-24">
-          <div className="px-5 pt-8 pb-4">
-            <h1 className="font-display text-3xl font-light mb-1">История & Цены</h1>
-            <p className="text-sm text-muted-foreground font-body">Ваши поездки и тарифы</p>
-          </div>
-
-          <div className="px-5">
-            <p className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-3">Мои поездки</p>
-            <div className="space-y-2 mb-6">
-              {history.map((h, idx) => (
-                <div
-                  key={h.id}
-                  className="bg-card border border-border rounded-2xl px-4 py-3 flex items-center justify-between animate-slide-right"
-                  style={{ animationDelay: `${idx * 0.08}s`, opacity: 0 }}
+            <div className="flex flex-col gap-2 mb-5">
+              {(Object.keys(schedule) as Direction[]).map((dir) => (
+                <button
+                  key={dir}
+                  onClick={() => setDirection(dir)}
+                  className={`w-full px-4 py-3 rounded-xl text-sm font-sans text-left flex items-center gap-3 transition-all border ${
+                    direction === dir
+                      ? "bg-forest text-white border-forest shadow"
+                      : "bg-card text-foreground border-border hover:bg-muted"
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${h.status === "Отменён" ? "bg-red-50" : "bg-sand"}`}>
-                      <Icon name={h.status === "Отменён" ? "X" : "CheckCircle"} size={16} className={h.status === "Отменён" ? "text-red-400" : "text-moss"} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-body font-medium text-foreground">{h.from} → {h.to}</p>
-                      <p className="text-xs text-muted-foreground font-body">{h.date}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-display text-base font-medium text-earth">{h.price.toLocaleString()} ₽</p>
-                    <p className={`text-xs font-body ${h.status === "Отменён" ? "text-red-400" : "text-moss"}`}>{h.status}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-3">Тарифы</p>
-            <div className="space-y-3">
-              {prices.map((p, idx) => (
-                <div
-                  key={p.route}
-                  className="bg-card border border-border rounded-2xl p-4 animate-fade-up"
-                  style={{ animationDelay: `${idx * 0.1}s`, opacity: 0 }}
-                >
-                  <p className="font-body text-sm font-medium text-foreground mb-3">{p.route}</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { label: "Эконом", price: p.economy, color: "bg-muted" },
-                      { label: "Комфорт", price: p.comfort, color: "bg-sand" },
-                      { label: "Бизнес", price: p.business, color: "bg-earth/10" },
-                    ].map((tier) => (
-                      <div key={tier.label} className={`${tier.color} rounded-xl p-2.5 text-center`}>
-                        <p className="text-xs font-body text-muted-foreground mb-1">{tier.label}</p>
-                        <p className="font-display text-base font-medium text-earth">{tier.price.toLocaleString()} ₽</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── PROFILE ─── */}
-      {activeTab === "profile" && (
-        <div className="flex-1 overflow-y-auto pb-24">
-          <div className="relative">
-            <div className="h-36 bg-gradient-to-br from-earth to-pine" />
-            <div className="px-5 -mt-8 pb-4">
-              <div className="flex items-end justify-between mb-4">
-                <div className="w-16 h-16 rounded-2xl bg-sand border-4 border-background flex items-center justify-center shadow-lg">
-                  <span className="font-display text-2xl text-earth">А</span>
-                </div>
-                <button className="px-4 py-2 bg-sand border border-border rounded-xl text-xs font-body text-earth hover:bg-amber/20 transition-colors">
-                  Изменить
+                  <Icon name="Bus" size={16} className={direction === dir ? "text-white/70" : "text-muted-foreground"} />
+                  <span className="font-medium">{dir}</span>
+                  {direction === dir && <Icon name="Check" size={14} className="ml-auto text-white/60" />}
                 </button>
-              </div>
-              <h2 className="font-display text-2xl font-light text-foreground">Алексей Смирнов</h2>
-              <p className="text-sm text-muted-foreground font-body">+7 (912) 345-67-89</p>
-            </div>
-          </div>
-
-          <div className="px-5 mb-6">
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: "Поездок", value: "12" },
-                { label: "Маршрутов", value: "5" },
-                { label: "Сэкономлено", value: "4 200 ₽" },
-              ].map((s) => (
-                <div key={s.label} className="bg-card border border-border rounded-2xl p-3 text-center">
-                  <p className="font-display text-xl font-medium text-earth">{s.value}</p>
-                  <p className="text-xs text-muted-foreground font-body mt-0.5">{s.label}</p>
-                </div>
               ))}
             </div>
-          </div>
 
-          <div className="px-5">
-            <p className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-3">Настройки</p>
+            {/* Анимация маршрута */}
+            <div className="flex items-center gap-2 mb-4 px-1">
+              <div className="route-dot" />
+              <div className="route-dash" />
+              <span className="animate-bus inline-block">
+                <Icon name="Bus" size={22} className="text-forest" />
+              </span>
+              <div className="route-dash" />
+              <div className="route-dot" />
+            </div>
+
+            {/* Рейсы */}
             <div className="space-y-2">
-              {[
-                { icon: "Bell", label: "Уведомления", value: notificationsOn ? "Включены" : "Выключены", toggle: true },
-                { icon: "CreditCard", label: "Способ оплаты", value: "Visa •• 4321", toggle: false },
-                { icon: "MapPin", label: "Избранные маршруты", value: "3 маршрута", toggle: false },
-                { icon: "Shield", label: "Безопасность", value: "Настроить", toggle: false },
-                { icon: "HelpCircle", label: "Поддержка", value: "Написать", toggle: false },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => item.toggle && setNotificationsOn(!notificationsOn)}
-                  className="w-full bg-card border border-border rounded-2xl px-4 py-3 flex items-center gap-3 card-hover text-left"
+              {schedule[direction].map((row, i) => {
+                const depMin = parseMin(row.dep);
+                const isPast = depMin < nowMin;
+                const isNext = !isPast && schedule[direction]
+                  .slice(0, i)
+                  .every(r => parseMin(r.dep) < nowMin);
+
+                return (
+                  <div
+                    key={i}
+                    className="card-wood flex items-center gap-3 px-4 py-3 animate-fade-up"
+                    style={{ animationDelay: `${i * 0.06}s`, opacity: isPast ? 0.42 : 1 }}
+                  >
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isNext ? "bg-green-500 animate-blink" : "bg-border"}`} />
+
+                    <div className="flex items-baseline gap-1.5 min-w-28">
+                      <span className={`font-serif text-xl font-bold ${isPast ? "text-muted-foreground" : "text-foreground"}`}>
+                        {row.dep}
+                      </span>
+                      <Icon name="ArrowRight" size={11} className="text-muted-foreground" />
+                      <span className="text-sm font-sans text-muted-foreground">{row.arr}</span>
+                    </div>
+
+                    <div className="flex-1 flex flex-wrap items-center gap-1.5">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-sans ${
+                        row.days === "ежедневно" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+                      }`}>
+                        {row.days}
+                      </span>
+                      {"via" in row && (
+                        <span className="text-xs text-muted-foreground font-sans">{(row as typeof row & { via: string }).via}</span>
+                      )}
+                    </div>
+
+                    {isNext && (
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-sans font-medium flex-shrink-0">
+                        ближайший
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="mt-4 text-xs text-muted-foreground font-sans text-center leading-relaxed">
+              Расписание ориентировочное — уточняйте у водителя<br />или в администрации Сысертского МО.
+            </p>
+          </div>
+        )}
+
+        {/* ══ ОБЪЯВЛЕНИЯ ══ */}
+        {tab === "news" && (
+          <div className="animate-fade-up">
+            <p className="section-label">Последние объявления</p>
+            <div className="space-y-3">
+              {news.map((n, i) => (
+                <div
+                  key={n.id}
+                  className="card-wood overflow-hidden animate-fade-up cursor-pointer"
+                  style={{ animationDelay: `${i * 0.07}s` }}
+                  onClick={() => setOpenNews(openNews === n.id ? null : n.id)}
                 >
-                  <div className="w-9 h-9 bg-sand rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Icon name={item.icon} size={16} className="text-earth" />
+                  <div className="px-4 py-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-sans ${n.tagColor}`}>{n.tag}</span>
+                      <span className="text-xs text-muted-foreground font-sans ml-auto">{n.date}</span>
+                    </div>
+                    <h3 className="font-serif text-[15px] font-bold text-foreground leading-snug">{n.title}</h3>
+
+                    {openNews === n.id && (
+                      <p className="mt-2.5 text-sm font-sans text-muted-foreground leading-relaxed animate-slide-down">
+                        {n.body}
+                      </p>
+                    )}
+
+                    <div className="flex justify-end mt-2">
+                      <Icon name={openNews === n.id ? "ChevronUp" : "ChevronDown"} size={15} className="text-muted-foreground" />
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-body font-medium text-foreground">{item.label}</p>
-                  </div>
-                  <span className="text-xs font-body text-muted-foreground">{item.value}</span>
-                  {!item.toggle && <Icon name="ChevronRight" size={14} className="text-muted-foreground" />}
-                </button>
+                </div>
               ))}
             </div>
 
-            <button className="w-full mt-4 py-3 bg-red-50 border border-red-100 rounded-2xl text-sm font-body text-red-500 hover:bg-red-100 transition-colors">
-              Выйти из аккаунта
+            <button className="mt-4 w-full card-wood flex items-center gap-3 px-4 py-3.5">
+              <div className="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Icon name="PlusCircle" size={18} className="text-forest" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-sans font-medium text-foreground">Подать объявление</p>
+                <p className="text-xs text-muted-foreground font-sans">Свяжитесь с администрацией сайта</p>
+              </div>
+              <Icon name="ChevronRight" size={15} className="text-muted-foreground ml-auto" />
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ─── BOOKING MODAL ─── */}
-      {selectedRoute !== null && (() => {
-        const r = routes.find(x => x.id === selectedRoute)!;
-        return (
-          <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedRoute(null)}>
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            <div
-              className="relative w-full max-w-md bg-card rounded-t-3xl border-t border-border p-6 animate-fade-up"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
-              <h2 className="font-display text-2xl font-light text-foreground mb-1">Бронирование</h2>
-              <p className="text-sm text-muted-foreground font-body mb-5">{r.from} → {r.to}</p>
-
-              <div className="bg-muted rounded-2xl p-4 mb-4 flex items-center justify-between">
-                <div>
-                  <p className="font-display text-2xl text-foreground">{r.time} — {r.arrive}</p>
-                  <p className="text-xs text-muted-foreground font-body">{r.type} · {r.duration}</p>
-                </div>
-                <p className="font-display text-2xl font-medium text-earth">{r.price.toLocaleString()} ₽</p>
-              </div>
-
-              <div className="mb-5">
-                <label className="text-xs font-body text-muted-foreground uppercase tracking-wider mb-2 block">Выберите место</label>
-                <div className="flex gap-2">
-                  {["12А", "12Б", "13А", "13Б"].map((seat) => (
-                    <button
-                      key={seat}
-                      onClick={() => setSelectedSeat(seat)}
-                      className={`flex-1 py-2 rounded-xl border text-sm font-body transition-colors ${selectedSeat === seat ? "bg-earth text-primary-foreground border-earth" : "border-border text-foreground hover:bg-sand hover:border-earth"}`}
+        {/* ══ КОНТАКТЫ ══ */}
+        {tab === "contacts" && (
+          <div className="animate-fade-up">
+            {contacts.map((group, gi) => (
+              <div key={gi} className="mb-6 animate-fade-up" style={{ animationDelay: `${gi * 0.09}s` }}>
+                <p className="section-label">{group.group}</p>
+                <div className="space-y-2">
+                  {group.items.map((item, ii) => (
+                    <a
+                      key={ii}
+                      href={`tel:${item.value.replace(/[\s()–-]/g, "")}`}
+                      className="card-wood flex items-center gap-3 px-4 py-3.5 block"
                     >
-                      {seat}
-                    </button>
+                      <div className={`w-10 h-10 ${item.bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                        <Icon name={item.icon} size={18} className={item.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-sans font-medium text-foreground">{item.label}</p>
+                        <p className="text-xs text-muted-foreground font-sans">{item.sub}</p>
+                      </div>
+                      <p className={`text-base font-serif font-bold flex-shrink-0 ${item.color}`}>{item.value}</p>
+                    </a>
                   ))}
                 </div>
               </div>
+            ))}
 
-              <button
-                onClick={confirmBook}
-                className="w-full py-3.5 bg-earth text-primary-foreground rounded-2xl font-body font-medium flex items-center justify-center gap-2 hover:bg-pine transition-colors"
-              >
-                <Icon name="CheckCircle" size={18} />
-                Подтвердить — {r.price.toLocaleString()} ₽
-              </button>
-            </div>
+            <a
+              href="https://yandex.ru/maps/?text=деревня+Ключи+Сысертский+район+Свердловская+область"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="card-wood flex items-center gap-3 px-4 py-3.5 block"
+            >
+              <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Icon name="MapPin" size={18} className="text-amber-700" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-sans font-medium text-foreground">Открыть на карте</p>
+                <p className="text-xs text-muted-foreground font-sans">д. Ключи и с. Фомино на Яндекс.Картах</p>
+              </div>
+              <Icon name="ExternalLink" size={14} className="text-muted-foreground" />
+            </a>
           </div>
-        );
-      })()}
+        )}
+      </main>
 
-      {/* ─── SUCCESS TOAST ─── */}
-      {booked !== null && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 glass rounded-2xl px-5 py-3 flex items-center gap-3 shadow-xl animate-fade-up max-w-xs w-full">
-          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <Icon name="CheckCircle" size={16} className="text-green-600" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-body font-medium text-foreground">Забронировано!</p>
-            <p className="text-xs text-muted-foreground font-body">
-              {routes.find(r => r.id === booked)?.from} → {routes.find(r => r.id === booked)?.to} · {selectedSeat}
-            </p>
-          </div>
-          <button onClick={() => setBooked(null)} className="text-muted-foreground hover:text-foreground">
-            <Icon name="X" size={14} />
-          </button>
-        </div>
-      )}
-
-      {/* ─── BOTTOM NAV ─── */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md glass border-t border-border px-2 py-2 flex items-center justify-around z-40">
-        {[
-          { id: "home" as Tab, icon: "Home", label: "Главная" },
-          { id: "schedule" as Tab, icon: "Clock", label: "Расписание" },
-          { id: "map" as Tab, icon: "Map", label: "Карта" },
-          { id: "history" as Tab, icon: "Receipt", label: "История" },
-          { id: "profile" as Tab, icon: "User", label: "Кабинет" },
-        ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all ${
-              activeTab === item.id
-                ? "bg-sand text-earth"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Icon name={item.icon} size={20} />
-            <span className="text-xs font-body">{item.label}</span>
-          </button>
-        ))}
-      </nav>
+      {/* ── ФУТЕР ── */}
+      <footer className="border-t border-border px-4 py-3 text-center bg-card">
+        <p className="text-xs text-muted-foreground font-sans">
+          д. Ключи & с. Фомино · Сысертский МО · Свердловская обл.
+        </p>
+      </footer>
     </div>
   );
 }
