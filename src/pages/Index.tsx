@@ -1,6 +1,57 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
+const seasons = [
+  {
+    id: "winter",
+    label: "Зима",
+    emoji: "❄️",
+    cover: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/6b75e6d5-71e6-40c2-b6ea-3734f4d57af6.jpg",
+    bg: "from-blue-200/80 to-blue-400/60",
+    photos: [
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/6b75e6d5-71e6-40c2-b6ea-3734f4d57af6.jpg", caption: "Деревня под снегом" },
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/ea2406f1-e54d-429e-a7f8-55df7d80bdf1.jpg", caption: "Зимний пейзаж" },
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/6b75e6d5-71e6-40c2-b6ea-3734f4d57af6.jpg", caption: "Морозное утро" },
+    ],
+  },
+  {
+    id: "spring",
+    label: "Весна",
+    emoji: "🌸",
+    cover: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/5cc24f3f-f046-44f1-8dfe-e60bc1080279.jpg",
+    bg: "from-pink-200/80 to-green-300/60",
+    photos: [
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/5cc24f3f-f046-44f1-8dfe-e60bc1080279.jpg", caption: "Цветущие сады" },
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/ea2406f1-e54d-429e-a7f8-55df7d80bdf1.jpg", caption: "Первая зелень" },
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/5cc24f3f-f046-44f1-8dfe-e60bc1080279.jpg", caption: "Весенняя дорога" },
+    ],
+  },
+  {
+    id: "summer",
+    label: "Лето",
+    emoji: "☀️",
+    cover: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/092a3f10-146e-4745-8dc9-e54c55d1d86a.jpg",
+    bg: "from-yellow-200/80 to-green-400/60",
+    photos: [
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/092a3f10-146e-4745-8dc9-e54c55d1d86a.jpg", caption: "Летние поля" },
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/ea2406f1-e54d-429e-a7f8-55df7d80bdf1.jpg", caption: "Огороды в деревне" },
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/092a3f10-146e-4745-8dc9-e54c55d1d86a.jpg", caption: "Жаркий полдень" },
+    ],
+  },
+  {
+    id: "autumn",
+    label: "Осень",
+    emoji: "🍂",
+    cover: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/0b423cd7-ffec-4ff9-8c62-46fb32ead483.jpg",
+    bg: "from-amber-300/80 to-orange-400/60",
+    photos: [
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/0b423cd7-ffec-4ff9-8c62-46fb32ead483.jpg", caption: "Золотая осень" },
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/ea2406f1-e54d-429e-a7f8-55df7d80bdf1.jpg", caption: "Листопад" },
+      { src: "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/0b423cd7-ffec-4ff9-8c62-46fb32ead483.jpg", caption: "Осенний туман" },
+    ],
+  },
+];
+
 type Tab = "schedule" | "news" | "contacts";
 
 const VILLAGE_IMG = "https://cdn.poehali.dev/projects/9eb2ccf4-962b-4b8a-acfa-a0018106fe6c/files/ea2406f1-e54d-429e-a7f8-55df7d80bdf1.jpg";
@@ -96,6 +147,8 @@ export default function Index() {
   const [tab, setTab] = useState<Tab>("schedule");
   const [direction, setDirection] = useState<Direction>("Ключи → Фомино");
   const [openNews, setOpenNews] = useState<number | null>(null);
+  const [openSeason, setOpenSeason] = useState<string | null>(null);
+  const [lightboxPhoto, setLightboxPhoto] = useState<{ src: string; caption: string } | null>(null);
 
   const nowHour = new Date().getHours();
   const greeting = nowHour < 12 ? "Доброе утро" : nowHour < 18 ? "Добрый день" : "Добрый вечер";
@@ -271,6 +324,79 @@ export default function Index() {
                 </div>
               ))}
             </div>
+
+            {/* ══ СЕЗОННЫЕ ФОТОРЕПОРТАЖИ ══ */}
+            <div className="mt-6">
+              <p className="section-label">Сезонные фоторепортажи</p>
+              <div className="grid grid-cols-2 gap-2">
+                {seasons.map((s, i) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setOpenSeason(openSeason === s.id ? null : s.id)}
+                    className="relative overflow-hidden rounded-xl aspect-square animate-fade-up group"
+                    style={{ animationDelay: `${i * 0.07}s` }}
+                  >
+                    <img src={s.cover} alt={s.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${s.bg} opacity-70`} />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                      <span className="text-2xl drop-shadow">{s.emoji}</span>
+                      <span className="text-white font-serif font-bold text-base drop-shadow-md">{s.label}</span>
+                    </div>
+                    {openSeason === s.id && (
+                      <div className="absolute bottom-2 right-2 w-5 h-5 bg-white/90 rounded-full flex items-center justify-center">
+                        <Icon name="ChevronDown" size={12} className="text-foreground" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Галерея выбранного сезона */}
+              {openSeason && (() => {
+                const s = seasons.find(x => x.id === openSeason)!;
+                return (
+                  <div className="mt-3 animate-slide-down">
+                    <p className="text-xs font-sans text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <span>{s.emoji}</span> {s.label} — фоторепортаж
+                    </p>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {s.photos.map((p, pi) => (
+                        <button
+                          key={pi}
+                          onClick={() => setLightboxPhoto(p)}
+                          className="relative overflow-hidden rounded-lg aspect-square animate-fade-up group"
+                          style={{ animationDelay: `${pi * 0.05}s` }}
+                        >
+                          <img src={p.src} alt={p.caption} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-end">
+                            <span className="text-white text-xs font-sans px-1.5 pb-1 opacity-0 group-hover:opacity-100 transition-opacity leading-tight">{p.caption}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Лайтбокс */}
+            {lightboxPhoto && (
+              <div
+                className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 animate-fade-in"
+                onClick={() => setLightboxPhoto(null)}
+              >
+                <button className="absolute top-5 right-5 text-white/70 hover:text-white" onClick={() => setLightboxPhoto(null)}>
+                  <Icon name="X" size={24} />
+                </button>
+                <img
+                  src={lightboxPhoto.src}
+                  alt={lightboxPhoto.caption}
+                  className="max-w-full max-h-[75vh] rounded-xl object-contain shadow-2xl animate-scale-in"
+                  onClick={e => e.stopPropagation()}
+                />
+                <p className="mt-4 text-white/70 text-sm font-sans">{lightboxPhoto.caption}</p>
+              </div>
+            )}
 
             <button className="mt-4 w-full card-wood flex items-center gap-3 px-4 py-3.5">
               <div className="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
